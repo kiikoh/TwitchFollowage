@@ -4,6 +4,9 @@ const _ = require("underscore");
 const Bottleneck = require("bottleneck");
 const fs = require("fs");
 const moment = require("moment");
+const ArgumentParser = require("argparse").ArgumentParser;
+const parser = new ArgumentParser({ addHelp: true, description: "Get the foillowage of all viewers in a chat" });
+parser.addArgument(["-c", "--channel"], { help: "The channel name" });
 
 const limiter = new Bottleneck({
 	reservoir: 750, // initial value
@@ -14,7 +17,7 @@ const limiter = new Bottleneck({
 	minTime: 85,
 });
 
-const channel = "xqcow";
+const channel = parser.parseArgs().channel.toLowerCase();
 const { client_id, client_secret } = JSON.parse(fs.readFileSync("config.json"));
 
 let usersProcessed = 0;
@@ -155,10 +158,10 @@ async function run() {
 		})
 	).then((values) => {
 		console.log(values);
-		storeData(values, `./${channel}_raw.json`);
+		storeData(values, `./data/${channel}_raw.json`);
 		let chartjs = parseDataToChartJS(_.without(values, 0));
-		storeData(chartjs, `./${channel}.json`);
-		showChart(chartjs);
+		storeData(chartjs, `./data/${channel}.json`);
+		// showChart(chartjs);
 	});
 }
 
