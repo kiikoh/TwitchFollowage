@@ -14,4 +14,4 @@ Using your text editor of choice add your twitch credentials to `config.json`.
 
 Then run
 
-`node -c CHANNEL_NAME .`
+`node . -c CHANNEL_NAME`
