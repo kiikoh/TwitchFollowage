@@ -4,9 +4,12 @@ const _ = require("underscore");
 const Bottleneck = require("bottleneck");
 const fs = require("fs");
 const moment = require("moment");
+const cliProgress = require("cli-progress");
 const ArgumentParser = require("argparse").ArgumentParser;
 const parser = new ArgumentParser({ addHelp: true, description: "Get the foillowage of all viewers in a chat" });
 parser.addArgument(["-c", "--channel"], { help: "The channel name" });
+
+const b1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
 
 const limiter = new Bottleneck({
 	reservoir: 750, // initial value
@@ -86,16 +89,18 @@ function getFollowage(from, to, token) {
 	})
 		.then((res) => res.json())
 		.then((res) => {
-			console.log(++usersProcessed, res);
+			// console.log(++usersProcessed, res);
+			b1.increment();
 			let timeFollowing = 0;
-			if (res.total != 0) {
+			if (res.total !== 0) {
 				timeFollowing = Date.now() - new Date(res.data[0].followed_at);
+				return { user: res.data[0].from_name, timeFollowing };
 			}
-			return timeFollowing;
+			return { user: "Null", timeFollowing: -1 };
 		})
 		.catch((err) => {
-			console.error("Going too fast!");
-			return 0;
+			console.error("Going too fast!", err);
+			return { user: from, timeFollowing: 0 };
 		});
 }
 
@@ -150,6 +155,7 @@ async function run() {
 	let bearerToken = await getAccessToken();
 	let channelID = await getID(channel, bearerToken);
 	let ids = await getIDs(chatters.chatters.viewers, bearerToken);
+	b1.start(chatters.chatters.viewers.length, 0);
 	Promise.all(
 		ids.map((e, i) => {
 			return limiter.schedule(() => {
@@ -159,8 +165,8 @@ async function run() {
 	).then((values) => {
 		console.log(values);
 		storeData(values, `./data/${channel}_raw.json`);
-		let chartjs = parseDataToChartJS(_.without(values, 0));
-		storeData(chartjs, `./data/${channel}.json`);
+		// let chartjs = parseDataToChartJS(_.without(values, 0));
+		// storeData(chartjs, `./data/${channel}.json`);
 		// showChart(chartjs);
 	});
 }
