@@ -94,13 +94,13 @@ function getFollowage(from, to, token) {
 			let timeFollowing = 0;
 			if (res.total !== 0) {
 				timeFollowing = Date.now() - new Date(res.data[0].followed_at);
-				return { user: res.data[0].from_name, timeFollowing };
+				return { user: res.data[0].from_name, timeFollowing, followed_at: res.data[0].followed_at };
 			}
-			return { user: "Null", timeFollowing: -1 };
+			return { user: "Null", timeFollowing: -1, followed_at: "" };
 		})
 		.catch((err) => {
 			console.error("Going too fast!", err);
-			return { user: from, timeFollowing: 0 };
+			return { user: from, timeFollowing: 0, followed_at: "" };
 		});
 }
 
